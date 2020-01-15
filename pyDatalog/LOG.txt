@@ -1,0 +1,4 @@
+15-01-2020 
+Linting the sources with flake8. 
+Fixing up these messages so errors that I introduce are immediately visible, and not lost in the noise.
+
