@@ -4,6 +4,7 @@
 *.c
 wheelhouse/*.*
 .idea/*.*
+env/*
 
 #################
 ## Eclipse
