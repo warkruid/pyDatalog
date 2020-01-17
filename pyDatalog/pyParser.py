@@ -156,7 +156,7 @@ class Expression(object):
         from .Aggregate import Aggregate
         if isinstance(operand, (Expression, Aggregate)):
             return operand
-        if isinstance(operand, type(lambda: None)) and (operand.__name__  # if PY3 else operand.func_name) == '<lambda>':
+        if isinstance(operand, type(lambda: None)) and (operand.__name__):  # if PY3 else operand.func_name) == '<lambda>':
             return Operation(None, operand, [Term(var) for var in getattr(operand, func_code).co_varnames])
         if isinstance(operand, slice):
             return Term([operand.start, operand.stop, operand.step])

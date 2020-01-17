@@ -212,7 +212,6 @@ def run_setup(with_cext):
         keywords="prolog, logic programming, database, SQL, data integration, expert system, AI",
         classifiers=[
             "Programming Language :: Python",
-            "Programming Language :: Python :: 2.7",
             "Programming Language :: Python :: 3",
             "Programming Language :: Prolog",
             "Development Status :: 4 - Beta",
