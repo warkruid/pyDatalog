@@ -285,4 +285,3 @@ class Running_sum(Rank):
     def add(self, row):
         self._value += row[self.index_value].id
         return list(row) + [self._value]
-        
