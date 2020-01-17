@@ -148,10 +148,10 @@ class Const(Term):
 
     def subst(self, env):  # unify
         return self
-    
+
     def shuffle(self, env):  # shuffle
         return self
-    
+
     def chase(self, env):  # unify
         return self
 
@@ -238,7 +238,7 @@ class VarTuple(Term):
             for e1, e2 in zip(term._id, self._id):
                 if e1.id != e2.id:
                     env = e1.unify(e2, env)
-                    if env is None: 
+                    if env is None:
                         return env
             return env
         if isinstance(term, Operation):
@@ -256,10 +256,11 @@ class VarTuple(Term):
 class Operation(Term):
     """ an arithmetic operation, a slice or a lambda """
     counter = util.Counter()
-    
+
     def __init__(self, lhs, operator, rhs):
         self.operator = operator
-        self.operator_id = 'l' + str(Operation.counter.next()) if isinstance(self.operator, type(util.LAMBDA)) else str(self.operator)
+        self.operator_id = 'l' + str(Operation.counter.next()) if isinstance(
+            self.operator, type(util.LAMBDA)) else str(self.operator)
         self.lhs = lhs
         self.rhs = rhs
         self.is_constant = False
@@ -358,7 +359,8 @@ class Pred(Interned):
                 o.arity = arity
                 o.prearity = None
                 words = o.name.split('.')
-                o.prefix, o.suffix = (words[0], words[1].split('[')[0]) if 1 < len(words) else ('','')
+                o.prefix, o.suffix = (words[0], words[1].split(
+                    '[')[0]) if 1 < len(words) else ('', '')
                 words = pred_name.split(']')
                 o.comparison = words[1] if 1 < len(words) else ''  # for f[X]<Y
 
@@ -378,7 +380,8 @@ class Pred(Interned):
         prefix = pred_id.split('.')[0]  # we assumes it has a '.'
         if prefix in Class_dict:
             for cls in Class_dict[prefix].__mro__:
-                rebased = pred_id.replace(prefix, cls.__name__, 1)  # only the first occurrence
+                # only the first occurrence
+                rebased = pred_id.replace(prefix, cls.__name__, 1)
                 if rebased in Logic.tl.logic.Db:
                     return True
         return False
@@ -387,7 +390,8 @@ class Pred(Interned):
         """determine the python class for a prefixed predicate (and caches it)"""
         # cannot be done at initialization, because the global Class_dict is not filled in yet
         if not hasattr(self, '_cls'):
-            self._cls = Class_dict.get(self.prefix, '') if self.prefix else None
+            self._cls = Class_dict.get(
+                self.prefix, '') if self.prefix else None
         return self._cls
 
     def parent_classes(self):
@@ -493,7 +497,8 @@ class Literal(object):
     def shuffle(self, env):  # shuffle
         result = []
         for term in self.terms:
-            result.append(term if isinstance(term, Const) else term.shuffle(env))
+            result.append(term if isinstance(
+                term, Const) else term.shuffle(env))
         return Literal(self.pred, result, aggregate=self.aggregate)
 
     def unify(self, other):  # unify
@@ -502,7 +507,8 @@ class Literal(object):
         env = {}
         for term, otherterm in zip(self.terms, other.terms):
             literal_i = term if isinstance(term, Const) else term.chase(env)
-            other_i = otherterm if isinstance(otherterm, Const) else otherterm.chase(env)
+            other_i = otherterm if isinstance(
+                otherterm, Const) else otherterm.chase(env)
             if literal_i.id != other_i.id:
                 env = literal_i.unify(other_i, env)
                 if env is None:
@@ -532,7 +538,8 @@ class Literal(object):
         """ Invoke the tasks. Each task may append new tasks on the schedule."""
         Ts = Logic.tl.logic
         saved_environment = Ts.Tasks, Ts.Recursive_Tasks, Ts.Recursive, Ts.Subgoals, Ts.Goal
-        Ts.Tasks, Ts.Recursive_Tasks, Ts.Subgoals, Ts.Goal = list(), deque(), {}, Subgoal(self)
+        Ts.Tasks, Ts.Recursive_Tasks, Ts.Subgoals, Ts.Goal = list(), deque(), {
+        }, Subgoal(self)
         Ts.gc_uncollected, Ts.Recursive = True, False
         todo, arg = (SEARCH, (Ts.Goal, ))
         while todo:
@@ -540,7 +547,8 @@ class Literal(object):
 
         if Ts.Goal.facts is True:
             return True
-        result = [tuple(term.id for term in literal.terms) for literal in list(Ts.Goal.facts.values())]
+        result = [tuple(term.id for term in literal.terms)
+                  for literal in list(Ts.Goal.facts.values())]
         Ts.Tasks, Ts.Recursive_Tasks, Ts.Recursive, Ts.Subgoals, Ts.Goal = saved_environment
         return result
 
@@ -555,7 +563,7 @@ class Clause(object):
         self.head = head
         self.body = body
         self.id = None
-    
+
     def __str__(self):
         return "%s <= %s" % (str(self.head), '&'.join(str(literal) for literal in self.body))
 
@@ -574,7 +582,8 @@ class Clause(object):
             if not self.body:  # if it is a fact
                 self.id = (self.head.get_fact_id(),)
             else:
-                self.id = (self.head.get_id(),) + tuple(bodi.get_id() for bodi in self.body)
+                self.id = (self.head.get_id(),) + tuple(bodi.get_id()
+                                                        for bodi in self.body)
         return self.id
 
     def subst(self, env, parent_class=None):
@@ -596,9 +605,9 @@ class Clause(object):
 
 def add_class(cls, name):
     """ Update the list of pyDatalog-capable classes, and update clauses accordingly"""
-     # this is needed because class definition could occur after clause definition
+    # this is needed because class definition could occur after clause definition
     Class_dict[name] = cls
-     #prefixed replace the first term of each functional comparison literal for that class..
+    # prefixed replace the first term of each functional comparison literal for that class..
     env = {Var(name).id: Const('_pyD_class')}
     for pred in Logic.tl.logic.Db.values():
         for clause in pred.db.values():
@@ -615,12 +624,14 @@ def insert(pred):
     Logic.tl.logic.Db[pred.id] = pred
     return pred
 
+
 def remove(pred):
     if pred.id in Logic.tl.logic.Pred_registry:
         del Logic.tl.logic.Pred_registry[pred.id]
     if pred.id in Logic.tl.logic.Db:
         del Logic.tl.logic.Db[pred.id]
     return pred
+
 
 def assert_(clause):
     """ Add a safe clause to the database """
@@ -632,7 +643,8 @@ def assert_(clause):
         pred.db[id_] = clause
         if not clause.body:  # if it is a fact, update indexes
             for i, term in enumerate(clause.head.terms):
-                clauses = pred.index[i].setdefault(term.id, set())  # create a set if needed
+                clauses = pred.index[i].setdefault(
+                    term.id, set())  # create a set if needed
                 clauses.add(clause)
         else:
             if any(literal.pred.id == pred.id for literal in clause.body):
@@ -641,6 +653,7 @@ def assert_(clause):
         insert(pred)
     return clause
 
+
 def retract(clause):
     """ retract a clause from the database"""
     pred = clause.head.pred
@@ -648,24 +661,27 @@ def retract(clause):
 
     if id_ in pred.db:
         if not clause.body:  # if it is a fact, update indexes
-            clause = pred.db[id_]  # make sure it is identical to the one in the index
+            # make sure it is identical to the one in the index
+            clause = pred.db[id_]
             for i, term in enumerate(clause.head.terms):
                 pred.index[i][term.id].remove(clause)
-                 # TODO del pred.index[i][term] if the set is empty
+                # TODO del pred.index[i][term] if the set is empty
         else:
             del pred.clauses[id_]
         del pred.db[id_]   # remove clause from pred.db
-     # delete it completely if it's a temporary query predicate
-    if pred.name.startswith('_pyD_query') and len(pred.db) == 0 and pred.prim == None:
+    # delete it completely if it's a temporary query predicate
+    if pred.name.startswith('_pyD_query') and len(pred.db) == 0 and pred.prim is None:
         remove(pred)
     return clause
+
 
 def relevant_clauses(literal):
     """ returns matching clauses for a literal query, using index """
     result = None
     for i, term in enumerate(literal.terms):
         if term.is_const():
-            facts = literal.pred.index[i].get(term.id, set())  # default : a set
+            facts = literal.pred.index[i].get(
+                term.id, set())  # default : a set
             result = facts if result is None else result.intersection(facts)
     if result is None:  # no constants found in literal, thus could not filter literal.pred.deb
         for v in literal.pred.db.values():
@@ -676,7 +692,9 @@ def relevant_clauses(literal):
         for v in result:
             yield v
 
-################# Subgoals  ###############################
+
+# Subgoals  ###############################
+
 
 """
 The remaining functions in this file is based on the tabled logic
@@ -692,12 +710,15 @@ It should be noted that a simplified version of the algorithm of
 supported with another algorithm.
 """
 
+
 class Subgoal(object):
     """
     A subgoal has a literal, a set of facts, and an array of waiters.
     A waiter is a pair containing a subgoal and a clause.
     """
-    __slots__ = ['literal', 'facts', 'waiters', 'tasks', 'clauses', 'recursive', 'is_done', 'on_completion_']
+    __slots__ = ['literal', 'facts', 'waiters', 'tasks',
+                 'clauses', 'recursive', 'is_done', 'on_completion_']
+
     def __init__(self, literal):
         self.literal = literal
         self.facts = {}
@@ -705,8 +726,8 @@ class Subgoal(object):
         self.recursive = literal.pred.recursive
         self.tasks = deque() if self.recursive else list()
         self.clauses = []
-         # subgoal is done when a partial literal is true
-         # or when one fact is found for a function of constants
+        # subgoal is done when a partial literal is true
+        # or when one fact is found for a function of constants
         self.is_done = False
         self.on_completion_ = []
 
@@ -722,7 +743,8 @@ class Subgoal(object):
         class0 = literal0.pred._class()
         terms = literal0.terms
 
-        if class0 and terms[1].is_const() and terms[1].id is None: return self.next_step()
+        if class0 and terms[1].is_const() and terms[1].id is None:
+            return self.next_step()
         if hasattr(literal0.pred, 'base_pred'):  # this is a negated literal
             if Logging and Logger.isEnabledFor(logging.DEBUG):
                 Logger.debug("pyDatalog will search negation of %s" % literal0)
@@ -735,96 +757,112 @@ class Subgoal(object):
 
             if Python_resolvers:
                 resolver = literal.pred.id if literal.pred.id in Python_resolvers \
-                        else literal.pred.id.replace(r'/', str(literal.pred.arity)+r"/")
+                    else literal.pred.id.replace(r'/', str(literal.pred.arity)+r"/")
                 if resolver in Python_resolvers:
                     if Logging and Logger.isEnabledFor(logging.DEBUG):
-                        Logger.debug("pyDatalog uses python resolvers for %s" % literal)
+                        Logger.debug(
+                            "pyDatalog uses python resolvers for %s" % literal)
                     for result in Python_resolvers[resolver](*terms):
                         self.fact_candidate(class0, result)
                     return self.next_step()
             if _class:
-                 # TODO add special method for custom comparison
-                method_name = '_pyD_%s%i' % (literal.pred.suffix, int(literal.pred.arity - 1))  #prefixed
+                # TODO add special method for custom comparison
+                method_name = '_pyD_%s%i' % (literal.pred.suffix, int(
+                    literal.pred.arity - 1))  # prefixed
                 if literal.pred.suffix and method_name in _class.__dict__:
                     if Logging and Logger.isEnabledFor(logging.DEBUG):
-                        Logger.debug("pyDatalog uses class resolvers for %s" % literal)
+                        Logger.debug(
+                            "pyDatalog uses class resolvers for %s" % literal)
                     for result in getattr(_class, method_name)(*(terms[1:])):
                         self.fact_candidate(class0, (terms[0],) + result)
                     return self.next_step()
                 if '_pyD_query' in _class.__dict__:
                     try:  # call class._pyD_query
                         if Logic.tl.logic.gc_uncollected and not _class.has_SQLAlchemy:
-                            gc.collect()  # to make sure pyDatalog.metaMixin.__refs__[cls] is correct
+                            # to make sure pyDatalog.metaMixin.__refs__[cls] is correct
+                            gc.collect()
                             Logic.tl.logic.gc_uncollected = False
-                        results = list(_class._pyD_query(literal.pred.name, terms[1:]))
+                        results = list(_class._pyD_query(
+                            literal.pred.name, terms[1:]))
                     except AttributeError:
                         pass
                     else:
                         if Logging and Logger.isEnabledFor(logging.DEBUG):
-                            Logger.debug("pyDatalog uses _pyD_query resolvers for %s" % literal)
+                            Logger.debug(
+                                "pyDatalog uses _pyD_query resolvers for %s" % literal)
                         for result in results:
                             self.fact_candidate(class0, (terms[0],) + result)
                         return self.next_step()
             if literal.pred.prim:  # X==Y, X < Y+Z
                 if Logging and Logger.isEnabledFor(logging.DEBUG):
-                    Logger.debug("pyDatalog uses comparison primitive for %s" % literal)
+                    Logger.debug(
+                        "pyDatalog uses comparison primitive for %s" % literal)
                 literal.pred.prim(literal, self)
                 return self.next_step()
             elif literal.aggregate:
                 if Logging and Logger.isEnabledFor(logging.DEBUG):
-                    Logger.debug("pyDatalog uses aggregate primitive for %s" % literal)
+                    Logger.debug(
+                        "pyDatalog uses aggregate primitive for %s" % literal)
                 base_terms = list(terms[:-1])
                 for i in literal.aggregate.slice_to_variabilize:
                     base_terms[i] = Fresh_var()
-                base_literal = Literal(literal.pred.name, base_terms)  # without aggregate to avoid infinite loop
+                # without aggregate to avoid infinite loop
+                base_literal = Literal(literal.pred.name, base_terms)
                 self.complete(base_literal, literal.aggregate)
                 return self.next_step()
-            elif literal.pred.id in Logic.tl.logic.Db:  # has a datalog definition, e.g. p(X), p[X]==Y
+            # has a datalog definition, e.g. p(X), p[X]==Y
+            elif literal.pred.id in Logic.tl.logic.Db:
                 assert self.clauses == []
                 for clause in relevant_clauses(literal):
                     renamed = clause.rename()
                     env = literal.unify(renamed.head)
-                    if env != None:
+                    if env is not None:
                         clause = renamed.subst(env, class0)
                         if Logging and Logger.isEnabledFor(logging.DEBUG):
-                            Logger.debug("pyDatalog will use clause : %s" % clause)
+                            Logger.debug(
+                                "pyDatalog will use clause : %s" % clause)
                         self.clauses.append((ADD_CLAUSE, (self, clause)))
                 if self.clauses:
                     self.schedule((NEXT_CLAUSE, (self,)))
                 return self.next_step()
-            elif literal.pred.comparison:  # p[X]<=Y => consider translating to (p[X]==Y1) & (Y1<Y)
+            # p[X]<=Y => consider translating to (p[X]==Y1) & (Y1<Y)
+            elif literal.pred.comparison:
                 literal1 = literal.equalized()
                 if literal1.pred.id in Logic.tl.logic.Db:  # equality has a datalog definition
                     Y1 = Fresh_var()
                     literal1.terms[-1] = Y1
-                    literal2 = Literal(literal.pred.comparison, [Y1, terms[-1]])
+                    literal2 = Literal(
+                        literal.pred.comparison, [Y1, terms[-1]])
                     clause = Clause(literal, [literal1, literal2])
                     renamed = clause.rename()
                     env = literal.unify(renamed.head)
-                    if env != None:
+                    if env is not None:
                         renamed = renamed.subst(env, class0)
                         if Logging and Logger.isEnabledFor(logging.DEBUG):
-                            Logger.debug("pyDatalog will use clause for comparison: %s" % renamed)
+                            Logger.debug(
+                                "pyDatalog will use clause for comparison: %s" % renamed)
                         self.schedule((ADD_CLAUSE, (self, renamed)))
                     return self.next_step()
 
         if class0:  # a.p[X]==Y, a.p[X]<y, to access instance attributes
             try:
                 if Logic.tl.logic.gc_uncollected and not class0.has_SQLAlchemy:
-                    gc.collect()  # to make sure pyDatalog.metaMixin.__refs__[cls] is correct
+                    # to make sure pyDatalog.metaMixin.__refs__[cls] is correct
+                    gc.collect()
                     Logic.tl.logic.gc_uncollected = False
                 results = tuple(class0.pyDatalog_search(literal))
             except AttributeError:
                 pass
             else:
                 if Logging and Logger.isEnabledFor(logging.DEBUG):
-                    Logger.debug("pyDatalog uses pyDatalog_search for %s" % literal)
+                    Logger.debug(
+                        "pyDatalog uses pyDatalog_search for %s" % literal)
                 for result in results:
                     self.fact_candidate(class0, result)
                 return self.next_step()
-        elif literal.pred.comparison and len(terms)==3 and terms[0].is_const() \
-        and terms[0].id != '_pyD_class' and terms[1].is_const():  # X.a[1]==Y
-             # do not use pyDatalog_search as the variable may not be in a pyDatalog class
+        elif literal.pred.comparison and len(terms) == 3 and terms[0].is_const() \
+                and terms[0].id != '_pyD_class' and terms[1].is_const():  # X.a[1]==Y
+            # do not use pyDatalog_search as the variable may not be in a pyDatalog class
             v = getattr(terms[0].id, literal.pred.suffix)
             if isinstance(terms[1], VarTuple):  # a slice
                 v = v.__getitem__(slice(*terms[1].id))
@@ -836,18 +874,19 @@ class Subgoal(object):
                 self.fact_candidate(class0, (terms[0], terms[1], v))
             else:
                 raise util.DatalogError("Error: right hand side of comparison must be bound: %s"
-                                    % literal.pred.id, None, None)
+                                        % literal.pred.id, None, None)
             return self.next_step()
 
-        raise AttributeError("Predicate without definition (or error in resolver): %s" % literal.pred.id)
+        raise AttributeError(
+            "Predicate without definition (or error in resolver): %s" % literal.pred.id)
 
-
-     ################## add derived facts and use rules  ##############
+    # add derived facts and use rules  ##############
 
     def add_clause(self, clause):
         """ SLG_NEWCLAUSE in the reference article """
         if self.is_done:  # for speed
-            if Slow_motion: print("Already completed !")
+            if Slow_motion:
+                print("Already completed !")
             return self.next_step()  # no need to keep looking if THE answer is found already
         if not clause.body:
             self.fact(clause.head)
@@ -867,7 +906,7 @@ class Subgoal(object):
                     all_const = False
                     break
         if literal is True or not all_const:
-            if self.facts != True:  # if already True, do not advise its waiters again
+            if self.facts is not True:  # if already True, do not advise its waiters again
                 if Logging and Logger.isEnabledFor(logging.INFO):
                     Logger.info("New fact : %s is True" % str(self.literal))
                 self.facts, self.is_done = True, True
@@ -882,23 +921,26 @@ class Subgoal(object):
                 if Logging and Logger.isEnabledFor(logging.INFO):
                     Logger.info("New fact : %s" % str(literal))
                 for subgoal, clause in self.waiters:
-                     # Resolve the selected literal of a clause with a literal.
-                     # The selected literal is the first literal in body of a rule.
-                     # A new clause is generated that has a body with one less literal.
+                    # Resolve the selected literal of a clause with a literal.
+                    # The selected literal is the first literal in body of a rule.
+                    # A new clause is generated that has a body with one less literal.
                     env = clause.body[0].unify(literal)
-                    assert env != None
+                    assert env is not None
                     resolvent = Clause(clause.head.subst(env),
-                                       [bodi.subst(env) for bodi in clause.body[1:] ])
+                                       [bodi.subst(env) for bodi in clause.body[1:]])
                     subgoal.schedule((ADD_CLAUSE, (subgoal, resolvent)))
-                if len(self.facts)==1:   # stop if one fact for a function of constant
-                    all_const = True  # Cython equivalent for all(self.literal.terms[i].is_const() for i in range(self.literal.pred.prearity)
+                if len(self.facts) == 1:   # stop if one fact for a function of constant
+                    all_const = True
+                    # Cython equivalent for all(self.literal.terms[i].is_const() for i in
+                    # range(self.literal.pred.prearity)
                     for i in range(self.literal.pred.prearity):
                         t = self.literal.terms[i]
                         if not(isinstance(t, Const) or t.is_const()):  # use isinstance for speed
                             all_const = False
                             break
                     if all_const:
-                        if Slow_motion: print("is done !")
+                        if Slow_motion:
+                            print("is done !")
                         self.is_done = True
                         self.waiters = []
 
@@ -910,27 +952,28 @@ class Subgoal(object):
         if len(result) != len(self.literal.terms):
             return
         result = [Term_of(r) for r in result]
-        if class0 and result[1].id and not isinstance(result[1].id, class0):  #prefixed
+        # prefixed
+        if class0 and result[1].id and not isinstance(result[1].id, class0):
             return
-        if self.literal.match(result) != None:
+        if self.literal.match(result) is not None:
             self.fact(Literal(self.literal.pred.name, result))
 
     def rule(self, clause, selected):
         """ Use a newly derived rule. SLG_POSITIVE in the reference article """
         sg = Logic.tl.logic.Subgoals.get(selected.get_tag())
-        if sg != None:  # selected subgoal exists already
+        if sg is not None:  # selected subgoal exists already
             if sg.facts is True:
                 resolvent = Clause(clause.head, clause.body[1:])
                 self.schedule((ADD_CLAUSE, (self, resolvent)))
             else:
                 for fact in sg.facts.values():  # catch-up with facts already established
                     env = clause.body[0].unify(fact)
-                    assert env != None
+                    assert env is not None
                     resolvent = Clause(clause.head.subst(env),
-                                       [bodi.subst(env) for bodi in clause.body[1:] ])
+                                       [bodi.subst(env) for bodi in clause.body[1:]])
                     self.schedule((ADD_CLAUSE, (self, resolvent)))
             if sg.tasks and sg != self:  # no need to say that I'm searching myself
-                self.schedule((SEARCHING, (self, sg )))
+                self.schedule((SEARCHING, (self, sg)))
             if not sg.is_done:
                 sg.waiters.append((self, clause))  # add me to sg's waiters
         else:  # new subgoal --> create it and launch it
@@ -938,19 +981,19 @@ class Subgoal(object):
             sg.waiters.append((self, clause))
             self.schedule_search(sg)
 
-
-     # state machine of the engine :
-     # A stack of thunks is used to avoid the stack overflow problem
-     # by delaying the evaluation of some functions
+    # state machine of the engine :
+    # A stack of thunks is used to avoid the stack overflow problem
+    # by delaying the evaluation of some functions
 
     def schedule(self, task):
         """ Schedule a task for later invocation """
-        if Slow_motion: print("  Add : %s" % show(task))
+        if Slow_motion:
+            print("  Add : %s" % show(task))
         if task[0] is SEARCH:
-             # not done in Subgoal.complete() for speed reason
+            # not done in Subgoal.complete() for speed reason
             if Slow_motion:
                 sg = Logic.tl.logic.Subgoals.get(self.literal.get_tag())
-                if sg != None:  # selected subgoal exists already
+                if sg is not None:  # selected subgoal exists already
                     assert False
 
             Logic.tl.logic.Subgoals[self.literal.get_tag()] = self
@@ -967,22 +1010,22 @@ class Subgoal(object):
         if self.recursive:
             if subgoal.recursive:
                 subgoal.schedule((SEARCH, (subgoal, )))  # first
-                self.schedule((SEARCHING, (self, subgoal )))  # last
+                self.schedule((SEARCHING, (self, subgoal)))  # last
             else:
-                self.schedule((SEARCHING, (self, subgoal )))  # last
+                self.schedule((SEARCHING, (self, subgoal)))  # last
                 subgoal.schedule((SEARCH, (subgoal, )))  # first
         else:
             if subgoal.recursive:
-                self.schedule((SEARCHING, (self, subgoal )))  # first !
+                self.schedule((SEARCHING, (self, subgoal)))  # first !
                 subgoal.schedule((SEARCH, (subgoal, )))  # last !
             else:
-                self.schedule((SEARCHING, (self, subgoal )))  # last
+                self.schedule((SEARCHING, (self, subgoal)))  # last
                 subgoal.schedule((SEARCH, (subgoal, )))  # first
 
     def next_step(self):
         """ returns the next step in the resolution """
         Ts = Logic.tl.logic
-         # self.print_()
+        # self.print_()
         if Slow_motion:
             if self.facts is not True:
                 print("Facts of:" + str(self))
@@ -1003,7 +1046,8 @@ class Subgoal(object):
                 print("  " + show(task))
             print(" ")
 
-        task = (None, None); tasks = None
+        task = (None, None)
+        tasks = None
         if not Ts.Goal.is_done:
             if Ts.Recursive:
                 if Ts.Recursive_Tasks:
@@ -1051,8 +1095,8 @@ class Subgoal(object):
                         subgoal.on_completion_.pop(pos)  # don't do it again
                         return task
             return self.next_step()
-         # restart searching of subgoal, in correct recursive mode
-         # unless the subgoal is a waiter of self (to prevent infinite loop)
+        # restart searching of subgoal, in correct recursive mode
+        # unless the subgoal is a waiter of self (to prevent infinite loop)
         if all(subgoal != waiter[0] for waiter in self.waiters):
             task = (SEARCHING, (self, subgoal))
             if task not in self.tasks:
@@ -1063,28 +1107,30 @@ class Subgoal(object):
                     print("Moving task forward : %s" % show(task))
                 if subgoal.recursive:  # find the last occurence of task
                     Ts.Recursive_Tasks.reverse()
-                    Ts.Recursive_Tasks.remove(task)  #TODO this may raise an error ?
+                    # TODO this may raise an error ?
+                    Ts.Recursive_Tasks.remove(task)
                     Ts.Recursive_Tasks.reverse()
                     Ts.Recursive_Tasks.append(task)
                 else:
-                    Ts.Tasks.remove(task)  #TODO this may raise an error ?
+                    Ts.Tasks.remove(task)  # TODO this may raise an error ?
                     Ts.Tasks.append(task)
             elif subgoal.clauses:
-                assert False  #TODO needs a test case
+                assert False  # TODO needs a test case
             Ts.Recursive = subgoal.recursive
         return self.next_step()
 
     def complete(self, literal, aggregate=None):
         """makes sure that subgoal is completed before calling post_thunk and resuming processing"""
-         #TODO check for infinite loops
-         # example : p(X) <= ~q(X); q(X) <= ~ p(X); creates an infinite loop
+        # TODO check for infinite loops
+        # example : p(X) <= ~q(X); q(X) <= ~ p(X); creates an infinite loop
         subgoal = Logic.tl.logic.Subgoals.get(literal.get_tag())
         if subgoal is None:  # selected subgoal does not exist yet
             subgoal = Subgoal(literal)
             self.schedule_search(subgoal)
         else:
             self.schedule((SEARCHING, (self, subgoal)))
-        subgoal.on_completion_.append( (ON_COMPLETION, (subgoal, self, aggregate)) )
+        subgoal.on_completion_.append(
+            (ON_COMPLETION, (subgoal, self, aggregate)))
 
     def on_completion(self, parent, aggregate):
         if Logging and Logger.isEnabledFor(logging.DEBUG):
@@ -1093,10 +1139,12 @@ class Subgoal(object):
         if aggregate:
             aggregate.complete(self, parent)
         else:
-            assert hasattr(parent.literal.pred, 'base_pred')  # parent is a negation
+            # parent is a negation
+            assert hasattr(parent.literal.pred, 'base_pred')
             if not self.facts:
                 parent.fact(True)
         return self.next_step()
+
 
 # op codes are defined after class Subgoal is defined
 SEARCHING = Subgoal.searching
@@ -1104,6 +1152,7 @@ SEARCH = Subgoal.search
 ADD_CLAUSE = Subgoal.add_clause
 NEXT_CLAUSE = Subgoal.next_clause
 ON_COMPLETION = Subgoal.on_completion
+
 
 def show(task):
     if task == (None, None):
@@ -1113,10 +1162,12 @@ def show(task):
               ADD_CLAUSE: "Add clause",
               NEXT_CLAUSE: "Next clause",
               ON_COMPLETION: "On completion"}
-    result = "{:40s}.. : ".format(str(task[1][0])[:40]) + result[task[0]] + " " + str(task[1][1:])
-    return result if len(result)<110 else result[:110]
+    result = "{:40s}.. : ".format(
+        str(task[1][0])[:40]) + result[task[0]] + " " + str(task[1][1:])
+    return result if len(result) < 110 else result[:110]
 
 # PRIMITIVES    ##################################################
+
 
 """
 
@@ -1143,15 +1194,17 @@ sequence of answers, each answer being an array of strings or numbers.
 
 """
 
+
 def equals_primitive(literal, subgoal):
     x = literal.terms[0]
     y = literal.terms[1]
-    env = x.unify(y, {})# Both terms must unify,
-    if env != None:                      # and at least one of them
+    env = x.unify(y, {})  # Both terms must unify,
+    if env is not None:                      # and at least one of them
         x = x.subst(env)           # must be a constant.
         y = y.subst(env)
-     #unbound: can't raise error if both are still unbound, because split(a,b,c) would fail (see test.py)
+    # unbound: can't raise error if both are still unbound, because split(a,b,c) would fail (see test.py)
     return x.equals_primitive(y, subgoal)
+
 
 def compare_primitive(literal, subgoal):
     x = literal.terms[0]
@@ -1159,7 +1212,8 @@ def compare_primitive(literal, subgoal):
     if not x.is_const():
         if literal.pred.name == '_pyD_in':
             if not y.is_const:
-                raise util.DatalogError("Error: right hand side must be bound: %s" % literal, None, None)
+                raise util.DatalogError(
+                    "Error: right hand side must be bound: %s" % literal, None, None)
             for v in y.id:
                 literal = Literal(literal.pred.name, [Term_of(v), y])
                 subgoal.fact(literal)
@@ -1174,13 +1228,18 @@ def compare_primitive(literal, subgoal):
                                 % literal.pred.id, None, None)
 
 # generic comparison function
-def compare(l,op,r):
-    return l in r if op=='_pyD_in' else l not in r if op=='_pyD_not_in' else l==r if op=='==' else l!=r if op=='!=' else l<r if op=='<' \
-        else l<=r if op=='<=' else l>=r if op=='>=' else l>r if op=='>' else None
-def compare2(l,op,r):
-    return l._in(r) if op=='_pyD_in' else l._not_in(r) if op=='_pyD_not_in' else compare(l,op,r)
+
+
+def compare(l, op, r):
+    return l in r if op == '_pyD_in' else l not in r if op == '_pyD_not_in' else l == r if op == '==' else l != r if op == '!=' else l < r if op == '<' \
+        else l <= r if op == '<=' else l >= r if op == '>=' else l > r if op == '>' else None
+
+
+def compare2(l, op, r):
+    return l._in(r) if op == '_pyD_in' else l._not_in(r) if op == '_pyD_not_in' else compare(l, op, r)
 
 # Initialization    ##################################################
+
 
 def clear():
     """ clears the logic """
@@ -1195,10 +1254,10 @@ def clear():
     Fresh_var.tl.counter = 0
 
     insert(Pred("==", 2)).prim = equals_primitive
-    insert(Pred("<" , 2)).prim = compare_primitive
+    insert(Pred("<", 2)).prim = compare_primitive
     insert(Pred("<=", 2)).prim = compare_primitive
     insert(Pred("!=", 2)).prim = compare_primitive
     insert(Pred(">=", 2)).prim = compare_primitive
-    insert(Pred(">" , 2)).prim = compare_primitive
+    insert(Pred(">", 2)).prim = compare_primitive
     insert(Pred("_pyD_in", 2)).prim = compare_primitive
     insert(Pred("_pyD_not_in", 2)).prim = compare_primitive

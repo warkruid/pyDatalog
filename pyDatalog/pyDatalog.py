@@ -84,12 +84,14 @@ DatalogError = util.DatalogError
 
 def assert_fact(predicate_name, *args):
     """ assert predicate_name(args) """
-    + pyParser.Literal.make(predicate_name, [pyParser.Expression._pyD_for(arg) for arg in args])
+    + pyParser.Literal.make(predicate_name,
+                            [pyParser.Expression._pyD_for(arg) for arg in args])
 
 
 def retract_fact(predicate_name, *args):
     """ retracts predicate_name(args) """
-    - pyParser.Literal.make(predicate_name, [pyParser.Expression._pyD_for(arg) for arg in args])
+    - pyParser.Literal.make(predicate_name,
+                            [pyParser.Expression._pyD_for(arg) for arg in args])
 
 
 def program():
@@ -199,14 +201,15 @@ def create_terms(*args):
         locals_ = stack[1][0].f_locals
         args = [arg.strip() for arglist in args for arg in
                 (arglist.split(',') if isinstance(arglist, util.string_types)
-                else [arglist])]
+                 else [arglist])]
         for arg in set(args + ATOMS):
             assert isinstance(arg, util.string_types)
             words = arg.split('.')
             if 2 < len(words):  # TODO deal with more
                 raise util.DatalogError("Too many '.' in atom %s" % arg, None,
                                         None)
-            b = __builtins__ if isinstance(__builtins__, dict) else __builtins__.__dict__  # for pypy
+            b = __builtins__ if isinstance(
+                __builtins__, dict) else __builtins__.__dict__  # for pypy
             if words[0] in b:  # if it 's a builtin
                 root = b[words[0]]
                 locals_[words[0]] = _pyD_decorator(root)
@@ -260,9 +263,12 @@ class metaMixin(type):
         def _getattr(self, attribute):
             """ responds to instance.method by asking datalog engine """
             if not attribute == '__iter__' and not attribute.startswith('_sa_'):
-                predicate_name = "%s.%s[1]==" % (self.__class__.__name__, attribute)
-                terms = (pyParser.Term('_pyD_class', forced_type='constant'), self, pyParser.Term("X"))  # prefixed
-                literal = pyParser.Literal.make(predicate_name, terms)  # TODO predicate_name[:-2]
+                predicate_name = "%s.%s[1]==" % (
+                    self.__class__.__name__, attribute)
+                terms = (pyParser.Term('_pyD_class', forced_type='constant'),
+                         self, pyParser.Term("X"))  # prefixed
+                literal = pyParser.Literal.make(
+                    predicate_name, terms)  # TODO predicate_name[:-2]
                 result = literal.lua.ask()
                 return result[0][-1] if result else None
             raise AttributeError
@@ -292,7 +298,8 @@ class metaMixin(type):
         # TODO check prearity
         def check_attribute(X):
             if attr_name not in X.__dict__ and attr_name not in cls.__dict__:
-                raise AttributeError("%s does not have %s attribute" % (cls.__name__, attr_name))
+                raise AttributeError(
+                    "%s does not have %s attribute" % (cls.__name__, attr_name))
 
         if len(terms) == 3:  # prefixed
             X, Y = terms[1], terms[2]
@@ -307,7 +314,8 @@ class metaMixin(type):
                     q = cls.session.query(cls)
                     check_attribute(cls)
                     if Y.is_const():
-                        q = q.filter(pyEngine.compare(getattr(cls, attr_name), operator, Y.id))
+                        q = q.filter(pyEngine.compare(
+                            getattr(cls, attr_name), operator, Y.id))
                     for r in q:
                         Y1 = getattr(r, attr_name)
                         if not Y.is_const() or not operator or pyEngine.compare(Y1, operator, Y.id):
@@ -321,7 +329,8 @@ class metaMixin(type):
                         yield (terms[0], X, Y.id if Y.is_const() else Y1 if operator == '==' else None)
             return
         else:
-            raise AttributeError("%s could not be resolved" % literal.pred.name)
+            raise AttributeError("%s could not be resolved" %
+                                 literal.pred.name)
 
 
 # following syntax to declare Mixin is used for compatibility with python 2 and 3

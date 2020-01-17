@@ -9,7 +9,8 @@ import sys
 import threading
 import builtins
 
-LAMBDA = lambda: None
+
+def LAMBDA(): return None
 
 
 class DatalogError(Exception):

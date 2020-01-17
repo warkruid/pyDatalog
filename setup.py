@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-#################### IMPORTS
+# IMPORTS
+from pyDatalog import version as VERSION
+import platform
 import os
 import sys
 import io
@@ -9,7 +11,7 @@ from distutils.errors import (CCompilerError, DistutilsExecError,
                               DistutilsPlatformError)
 from distutils.core import Command as TestCommand
 #
-#################### GLOBAL VARIABLES
+# GLOBAL VARIABLES
 BEFORE_BREAK_PY3 = (2, 7)
 AFTER_BREAK_PY3 = (3, 0)
 LINE_STARS = '*' * 75
@@ -27,9 +29,9 @@ README = "README.md"
 CHANGES = "CHANGES.txt"
 TODO = "TODO.md"
 SHORT_DESCRIPTION = "A pure-python implementation of Datalog, "\
-"a truly declarative language derived from Prolog."
+    "a truly declarative language derived from Prolog."
 
-#################### SYSTEM ANALYSIS
+# SYSTEM ANALYSIS
 #
 HAS_FEATURE = False
 #
@@ -57,7 +59,6 @@ if sys.version_info < BEFORE_BREAK_PY3:
 elif sys.version_info >= AFTER_BREAK_PY3:
     PY3K = True
 
-import platform
 CPYTHON = platform.python_implementation() == 'CPython'
 
 EXT_ERRORS = (CCompilerError, DistutilsExecError, DistutilsPlatformError)
@@ -66,7 +67,8 @@ if sys.platform == 'win32':
     # find the compiler
     EXT_ERRORS = EXT_ERRORS + (IOError,)
 
-######################## CLASSES
+# CLASSES
+
 
 class BuildFailed(Exception):
     """
@@ -99,6 +101,7 @@ class VeBuildExt(build_ext):
                 raise BuildFailed()
             raise BuildFailed()
 
+
 class PyTest(TestCommand):
     """
     For "python setup.py test" working.
@@ -110,12 +113,14 @@ class PyTest(TestCommand):
     #
     # a KILLER line, indeed !
     user_options = []
+
     def initialize_options(self):
         """
         Subclassing abstract class PyTest
         """
         pass
     #
+
     def finalize_options(self):
         """
         Subclassing abstract class PyTest
@@ -133,8 +138,10 @@ class PyTest(TestCommand):
         raise SystemExit(errno)
 
 #
-##################### FUNCTIONS
+# FUNCTIONS
 #
+
+
 def _read(*filenames, **kwargs):
     """
     Read the docs and give a long description.
@@ -162,14 +169,14 @@ def status_msgs(*msgs):
 
 
 #
-############## PREPARING SETUP VALUES
+# PREPARING SETUP VALUES
 #
-from pyDatalog import version as VERSION
 _LONG_DESCRIPTION = _read(README, CHANGES, TODO)
 #
 CMDCLASS['build_ext'] = VeBuildExt
 CMDCLASS['test'] = PyTest
 #
+
 
 def run_setup(with_cext):
     """
@@ -179,7 +186,7 @@ def run_setup(with_cext):
     ext_modules = [
         Extension('pyDatalog.pyEngine',
                   sources=['pyDatalog/pyEngine.c']),
-        ]
+    ]
 
     if with_cext:
         if HAS_FEATURE:
@@ -187,23 +194,23 @@ def run_setup(with_cext):
                 "optional C speed-enhancements",
                 standard=True,
                 ext_modules=ext_modules
-                )}
+            )}
         else:
             kwargs['ext_modules'] = ext_modules
 
     setup(
-        name = PYDATALOG,
-        packages = [PYDATALOG, "pyDatalog/examples"],
-        version = VERSION.__version__,
-        cmdclass = CMDCLASS,
-        description = SHORT_DESCRIPTION,
-        author = "Pierre Carbonnelle",
-        author_email = "pierre.carbonnelle@gmail.com",
+        name=PYDATALOG,
+        packages=[PYDATALOG, "pyDatalog/examples"],
+        version=VERSION.__version__,
+        cmdclass=CMDCLASS,
+        description=SHORT_DESCRIPTION,
+        author="Pierre Carbonnelle",
+        author_email="pierre.carbonnelle@gmail.com",
         tests_require=['pytest'],
-        url = "https://sites.google.com/site/pydatalog/",
-        download_url = "http://pypi.python.org/pypi?name=pyDatalog&:action=display",
-        keywords = "prolog, logic programming, database, SQL, data integration, expert system, AI",
-        classifiers = [
+        url="https://sites.google.com/site/pydatalog/",
+        download_url="http://pypi.python.org/pypi?name=pyDatalog&:action=display",
+        keywords="prolog, logic programming, database, SQL, data integration, expert system, AI",
+        classifiers=[
             "Programming Language :: Python",
             "Programming Language :: Python :: 2.7",
             "Programming Language :: Python :: 3",
@@ -218,12 +225,13 @@ def run_setup(with_cext):
             "Operating System :: OS Independent",
             "Topic :: Software Development :: Libraries :: Python Modules",
             "Topic :: Scientific/Engineering :: Artificial Intelligence",
-            ],
-        long_description = _LONG_DESCRIPTION,        
-     **kwargs
+        ],
+        long_description=_LONG_DESCRIPTION,
+        **kwargs
     )
 
-####################### MAIN
+# MAIN
+
 
 if not CPYTHON:
     run_setup(False)

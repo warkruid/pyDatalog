@@ -27,22 +27,25 @@ session = Session()
 Base.session = session
 
 """ 2. define python class and business rules """
+
+
 class Employee(Base): # --> Employee inherits from the Base class
     __tablename__ = 'employee'
-    
+
     name = Column(String, primary_key=True)
     manager_name = Column(String, ForeignKey('employee.name'))
     salary = Column(Integer)
-    
+
     def __init__(self, name, manager_name, salary):
         super(Employee, self).__init__()
         self.name = name
-        self.manager_name = manager_name # direct manager of the employee, or None
-        self.salary = salary # monthly salary of the employee
-    def __repr__(self): # specifies how to display the employee
+        self.manager_name = manager_name  # direct manager of the employee, or None
+        self.salary = salary  # monthly salary of the employee
+
+    def __repr__(self):  # specifies how to display the employee
         return "Employee: %s" % self.name
 
-    @pyDatalog.program() # --> the following function contains pyDatalog clauses
+    @pyDatalog.program()  # --> the following function contains pyDatalog clauses
     def Employee(self):
         (Employee.manager[X]==Y) <= (Employee.manager_name[X]==Z) & (Z==Employee.name[Y])
         # the salary class of employee X is computed as a function of his/her salary
@@ -105,7 +108,7 @@ Employee.report_count[X] == 2
 print(X) # prints [Employee: John]
 
 # what is the total salary of the employees of John ?
-# note : it is better to place aggregation clauses in the class definition 
+# note : it is better to place aggregation clauses in the class definition
 Mary.salary = 6400 # queries use the latest, in-session, data
 (Employee.budget[X] == sum_(N, for_each=Y)) <= (Employee.indirect_manager(Y, X)) & (Employee.salary[Y]==N)
 Employee.budget[John]==X
@@ -113,5 +116,5 @@ print(X) # prints [12300]
 
 # who has the lowest salary ?
 (lowest[1] == min_(X, order_by=N)) <= (Employee.salary[X]==N)
-# must use ask() because inline queries cannot use unprefixed literals 
-print(lowest[1]==X) # Sam is the result
+# must use ask() because inline queries cannot use unprefixed literals
+print(lowest[1]==X)  # Sam is the result
